@@ -1,9 +1,10 @@
 "use client";
 import { Clothes, ClothesSchema } from "@/schema/ClothesSchemas";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+
 import {
     Card,
     CardContent,
@@ -13,7 +14,7 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import Loader from "./ClothesLoader";
-import AddToCart from "./AddToCart";
+import Link from "next/link";
 
 export default function CardItem() {
     const {
@@ -43,13 +44,13 @@ export default function CardItem() {
         );
     }
     if (isSuccess) {
-        return clothes.map((item) => (
-            <div key={item._id} className="col-span-1">
+        return clothes.map((item, index) => (
+            <div key={index} className="col-span-1">
                 <Card>
                     <CardHeader>
                         <CardTitle>{item.name}</CardTitle>
                         <CardDescription>
-                            Available: {Math.min(item.available - item.ordered, item.max - 0)}
+                            Available: {item.available - item.ordered}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -62,7 +63,12 @@ export default function CardItem() {
                         />
                     </CardContent>
                     <CardFooter className="flex justify-between">
-                        <AddToCart id={item._id} ordered={item.ordered} available={item.available} max={item.max} />
+                        <Link
+                            href={`/clothes/${item._id}`}
+                            className={`w-full ${buttonVariants()}`}
+                        >
+                            Edit Item
+                        </Link>
                     </CardFooter>
                 </Card>
             </div>

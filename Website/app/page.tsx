@@ -1,6 +1,3 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Suspense } from "react";
 import CardItem from "@/components/web/CardComponent";
 
 export default function Home() {

@@ -6,8 +6,8 @@ export const ClothesSchema = new Schema({
     max: Number,
     available: Number,
     ordered: Number,
-});
+})
 
-const ClothesModel = mongoose.models.clothes || model("clothes", ClothesSchema);
+const ClothesModel = mongoose.models.clothes || model("clothes", ClothesSchema)
 
-export default ClothesModel;
+export default ClothesModel
