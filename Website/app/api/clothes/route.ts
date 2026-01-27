@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import ClothesModel from "@/models/Clothes";
 import connectToDB from "@/lib/mongodb";
 import { ClothesSchema } from "@/schema/ClothesSchemas";
+import { Binary } from "mongodb";
 
 export async function GET() {
     try {
@@ -17,6 +18,15 @@ export async function GET() {
             const normalized = {
                 ...cloth,
                 _id: cloth._id.toString(),
+                image: cloth.image
+                    ? {
+                          data:
+                              cloth.image.data instanceof Binary
+                                  ? Buffer.from(cloth.image.data.buffer)
+                                  : cloth.image.data,
+                          contentType: cloth.image.contentType,
+                      }
+                    : undefined,
             };
 
             const parsed = ClothesSchema.safeParse(normalized);
@@ -25,7 +35,15 @@ export async function GET() {
                 throw new Error(parsed.error.message);
             }
 
-            return parsed.data;
+            return {
+                ...parsed.data,
+                image: parsed.data.image
+                    ? {
+                          data: parsed.data.image.data.toString("base64"),
+                          contentType: parsed.data.image.contentType,
+                      }
+                    : undefined,
+            };
         });
 
         return NextResponse.json(parsedClothes, { status: 200 });

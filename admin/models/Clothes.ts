@@ -1,8 +1,11 @@
 import mongoose, { model, Schema } from "mongoose";
 
 export const ClothesSchema = new Schema({
-    name: String,
-    image: String,
+    name: { type: String, required: true, unique: true },
+    image: {
+        data: Buffer,
+        contentType: String,
+    },
     max: Number,
     available: Number,
     ordered: Number,

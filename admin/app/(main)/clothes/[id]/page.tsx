@@ -16,14 +16,16 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clothes, ClothesSchema } from "@/schema/ClothesSchemas";
+import { AddClothes, Clothes, ClothesSchema } from "@/schema/ClothesSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { notFound, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 // import z from "zod";
 
 const page = () => {
@@ -32,7 +34,7 @@ const page = () => {
         defaultValues: {
             _id: "",
             name: "",
-            image: "",
+            image: { data: Buffer.from([]), contentType: "" },
             max: 0,
             available: 0,
             ordered: 0,
@@ -41,7 +43,32 @@ const page = () => {
 
     const params = useParams();
     const [isPending, startTransition] = useTransition();
+    const router = useRouter()
     const id = params.id as string;
+    const { mutateAsync: addClothes } = useMutation({
+        mutationFn: async (formData: AddClothes) => {
+            const res = await fetch(`/api/clothes/${id}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    // convert Buffer to base64 string to send over JSON
+                    image: {
+                        data: formData.image.data.toString("base64"),
+                        contentType: formData.image.contentType,
+                    },
+                }),
+            });
+            if (!res.ok) throw new Error("Failed to add clothes");
+            return res.json();
+        },
+        onSuccess: () => {
+            toast.success("تم إضافة الملابس");
+            router.push("/");
+        },
+    });
     const {
         data: cloth,
         isError,
@@ -64,9 +91,7 @@ const page = () => {
 
     // 1️⃣ Show loader while fetching
     if (isLoading) {
-        return (
-            <Loading />
-        );
+        return <Loading />;
     }
 
     // 2️⃣ Handle error / not found after loading
@@ -74,24 +99,27 @@ const page = () => {
         notFound();
     }
 
-    const onSubmit = async (data: Clothes) => {
+    const onSubmit = async (formData: Clothes) => {
         startTransition(() => {
-            console.log(data);
+            console.log("Form Data Ready to Send:", formData);
+            // Send formData to your backend API
+            addClothes(formData);
         });
     };
+
     return (
         <div className="py-12">
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-                    Edit Cloth
+                    تعديل اللبس
                 </h1>
             </div>
             <Card className="max-w-xl w-full mx-auto">
                 <CardHeader>
-                    <CardTitle>Edit Cloth</CardTitle>
+                    <CardTitle>تعديل اللبس</CardTitle>
                     <CardDescription className="flex justify-center">
                         <Image
-                            src={cloth.image}
+                            src={`data:${cloth.image.contentType};base64,${cloth.image.data.toString("base64")}`}
                             alt={cloth.name}
                             width={300}
                             height={300}
@@ -107,13 +135,13 @@ const page = () => {
                                 render={({ field, fieldState }) => {
                                     return (
                                         <Field>
-                                            <FieldLabel>Name</FieldLabel>
+                                            <FieldLabel>الاسم</FieldLabel>
                                             <Input
                                                 {...field}
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Enter the name"
+                                                placeholder="الاسم"
                                             />
                                             {fieldState.error && (
                                                 <FieldError
@@ -130,13 +158,13 @@ const page = () => {
                                 render={({ field, fieldState }) => {
                                     return (
                                         <Field>
-                                            <FieldLabel>Max</FieldLabel>
+                                            <FieldLabel>الحد الأقصى</FieldLabel>
                                             <Input
                                                 {...field}
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Enter the max"
+                                                placeholder="الحد الأقصى"
                                                 type="number"
                                             />
                                             {fieldState.error && (
@@ -154,13 +182,13 @@ const page = () => {
                                 render={({ field, fieldState }) => {
                                     return (
                                         <Field>
-                                            <FieldLabel>Available</FieldLabel>
+                                            <FieldLabel>المتاح</FieldLabel>
                                             <Input
                                                 {...field}
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Enter the available"
+                                                placeholder="المتاح"
                                                 type="number"
                                             />
                                             {fieldState.error && (
@@ -178,14 +206,27 @@ const page = () => {
                                 render={({ field, fieldState }) => {
                                     return (
                                         <Field>
-                                            <FieldLabel>Image</FieldLabel>
+                                            <FieldLabel>الصورة</FieldLabel>
                                             <Input
-                                                {...field}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                placeholder="Enter the ordered"
-                                                type="number"
+                                                accept="image/*"
+                                                type="file"
+                                                onChange={async (e) => {
+                                                    const file =
+                                                        e.target.files?.[0];
+                                                    if (file) {
+                                                        const arrayBuffer =
+                                                            await file.arrayBuffer();
+                                                        const buffer =
+                                                            Buffer.from(
+                                                                arrayBuffer,
+                                                            );
+                                                        field.onChange({
+                                                            data: buffer,
+                                                            contentType:
+                                                                file.type,
+                                                        });
+                                                    }
+                                                }}
                                             />
                                             {fieldState.error && (
                                                 <FieldError
@@ -200,10 +241,10 @@ const page = () => {
                                 {isPending ? (
                                     <>
                                         <Loader2 className="size-4 animate-spin" />{" "}
-                                        <span>Updating...</span>
+                                        <span>تحديث...</span>
                                     </>
                                 ) : (
-                                    "Create Post"
+                                    "تحديث"
                                 )}
                             </Button>
                         </FieldGroup>
@@ -219,8 +260,7 @@ export default page;
 const Loading = () => {
     return (
         <div className="py-12">
-            <div className="text-center mb-12">
-            </div>
+            <div className="text-center mb-12"></div>
             <Card className="max-w-xl w-full mx-auto">
                 <CardHeader>
                     <CardDescription className="flex justify-center">

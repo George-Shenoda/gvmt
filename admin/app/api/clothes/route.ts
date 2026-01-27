@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import ClothesModel from "@/models/Clothes";
 import connectToDB from "@/lib/mongodb";
 import { ClothesSchema } from "@/schema/ClothesSchemas";
+import { Binary } from "mongodb";
 
 export async function GET() {
     try {
@@ -16,7 +17,16 @@ export async function GET() {
         const parsedClothes = clothes.map((cloth) => {
             const normalized = {
                 ...cloth,
-                _id: cloth._id.toString(), // 🔥 FIX
+                _id: cloth._id.toString(),
+                image: cloth.image
+                    ? {
+                          data:
+                              cloth.image.data instanceof Binary
+                                  ? Buffer.from(cloth.image.data.buffer)
+                                  : cloth.image.data,
+                          contentType: cloth.image.contentType,
+                      }
+                    : undefined,
             };
 
             const parsed = ClothesSchema.safeParse(normalized);
@@ -25,7 +35,15 @@ export async function GET() {
                 throw new Error(parsed.error.message);
             }
 
-            return parsed.data;
+            return {
+                ...parsed.data,
+                image: parsed.data.image
+                    ? {
+                          data: parsed.data.image.data.toString("base64"),
+                          contentType: parsed.data.image.contentType,
+                      }
+                    : undefined,
+            };
         });
 
         return NextResponse.json(parsedClothes, { status: 200 });
@@ -42,14 +60,24 @@ export async function POST(request: Request) {
     try {
         await connectToDB();
         const body = await request.json();
-        const clothParsed = ClothesSchema.safeParse(body);
-        if (!clothParsed.success) {
+        const match = await ClothesModel.findOne({ name: body.name });
+        if (match) {
             return NextResponse.json(
-                { error: clothParsed.error.message },
+                { error: "Clothes already exists" },
                 { status: 400 },
             );
         }
-        const newCloth = await ClothesModel.create(clothParsed.data);
+        const newClothes = new ClothesModel({
+            name: body.name,
+            max: body.max,
+            available: body.available,
+            ordered: 0,
+            image: {
+                data: Buffer.from(body.image.data, "base64"),
+                contentType: body.image.contentType,
+            },
+        });
+        const newCloth = await newClothes.save();
         return NextResponse.json(newCloth, { status: 201 });
     } catch (error) {
         console.error(error);
@@ -59,4 +87,3 @@ export async function POST(request: Request) {
         );
     }
 }
-

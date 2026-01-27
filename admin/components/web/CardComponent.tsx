@@ -39,7 +39,7 @@ export default function CardItem() {
     if (!clothes || clothes.length === 0 || !isSuccess) {
         return (
             <div className="container mx-auto w-screen h-[calc(100vh-8rem)] flex items-center justify-center">
-                <h2 className="text-2xl font-bold">No Clothes Added Yet</h2>
+                <h2 className="text-2xl font-bold">مفيش لبس حاليا</h2>
             </div>
         );
     }
@@ -50,12 +50,12 @@ export default function CardItem() {
                     <CardHeader>
                         <CardTitle>{item.name}</CardTitle>
                         <CardDescription>
-                            Available: {item.available - item.ordered}
+                            متوفر: {item.available - item.ordered}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Image
-                            src={item.image}
+                            src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
                             alt={item.name}
                             width={300}
                             height={300}
@@ -67,7 +67,7 @@ export default function CardItem() {
                             href={`/clothes/${item._id}`}
                             className={`w-full ${buttonVariants()}`}
                         >
-                            Edit Item
+                            تعديل
                         </Link>
                     </CardFooter>
                 </Card>

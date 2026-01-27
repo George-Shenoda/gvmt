@@ -2,41 +2,140 @@ import { NextResponse } from "next/server";
 import ClothesModel from "@/models/Clothes";
 import connectToDB from "@/lib/mongodb";
 import { ClothesSchema } from "@/schema/ClothesSchemas";
+import { Binary } from "mongodb";
 
-export async function POST(
+export async function GET(
     request: Request,
     { params }: { params: { id: string } },
 ) {
     const { id } = await params;
+
+    try {
+        await connectToDB();
+
+        const cloth = await ClothesModel.findById(id).lean();
+        if (!cloth) {
+            return NextResponse.json(
+                { error: "Clothes not found" },
+                { status: 404 },
+            );
+        }
+
+        // Convert Buffer to Base64 for JSON serialization
+        const clothParsed = {
+            ...cloth,
+            _id: cloth._id.toString(),
+            image: cloth.image
+                ? {
+                      data:
+                          cloth.image.data instanceof Binary
+                              ? Buffer.from(cloth.image.data.buffer)
+                              : cloth.image.data,
+                      contentType: cloth.image.contentType,
+                  }
+                : undefined,
+        };
+
+        const validated = ClothesSchema.safeParse(clothParsed);
+        if (!validated.success) {
+            return NextResponse.json(
+                { error: validated.error.message },
+                { status: 400 },
+            );
+        }
+
+        return NextResponse.json(
+            {
+                ...validated.data,
+                image: validated.data.image
+                    ? {
+                          data: validated.data.image.data.toString("base64"),
+                          contentType: validated.data.image.contentType,
+                      }
+                    : undefined,
+            },
+            { status: 200 },
+        );
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            { error: `Failed to fetch clothes ${error}` },
+            { status: 500 },
+        );
+    }
+}
+
+export async function PATCH(
+    request: Request,
+    { params }: { params: { id: string } },
+) {
+    const { id } = await params;
+    const { operation } = await request.json();
     try {
         await connectToDB();
 
         if (!id) {
-            return NextResponse.json({ error: "Clothes ID is required" }, { status: 400 });
+            return NextResponse.json(
+                { error: "Clothes ID is required" },
+                { status: 400 },
+            );
         }
-
+        console.log(id, operation);
         const cloth = await ClothesModel.findByIdAndUpdate(
             id,
-            { $inc: { ordered: 1 } },
-            { new: true }
-        ).lean().exec();
+            { $inc: { ordered: operation === "add" ? 1 : -1 } },
+            { new: true },
+        )
+            .lean()
+            .exec();
 
         if (!cloth) {
-            return NextResponse.json({ error: "Clothes not found" }, { status: 404 });
+            return NextResponse.json(
+                { error: "Clothes not found" },
+                { status: 404 },
+            );
         }
 
         const clothesParsed = {
             ...cloth,
             _id: cloth._id.toString(),
-        }
+            image: cloth.image
+                ? {
+                      data:
+                          cloth.image.data instanceof Binary
+                              ? Buffer.from(cloth.image.data.buffer)
+                              : cloth.image.data,
+                      contentType: cloth.image.contentType,
+                  }
+                : undefined,
+        };
         const parsedClothes = ClothesSchema.safeParse(clothesParsed);
         if (!parsedClothes.success) {
-            return NextResponse.json({ error: parsedClothes.error.message }, { status: 400 });
+            return NextResponse.json(
+                { error: parsedClothes.error.message },
+                { status: 400 },
+            );
         }
 
-        return NextResponse.json(parsedClothes.data, { status: 200 });
+        return NextResponse.json(
+            {
+                ...parsedClothes.data,
+                image: parsedClothes.data.image
+                    ? {
+                          data: parsedClothes.data.image.data.toString(
+                              "base64",
+                          ),
+                          contentType: parsedClothes.data.image.contentType,
+                      }
+                    : undefined,
+            },
+            { status: 200 },
+        );
     } catch (error: any) {
         console.error(error);
-        return NextResponse.json({ error: `Failed to update clothes: ${error.message}` }, { status: 500 });
+        return NextResponse.json(
+            { error: `Failed to update clothes: ${error.message}` },
+            { status: 500 },
+        );
     }
 }

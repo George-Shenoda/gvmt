@@ -27,13 +27,12 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang="ar" dir="rtl" suppressHydrationWarning>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
                 <QueryProvider>
                     <ThemeProvider attribute="class">
-                        <Navbar />
                         {children}
                         <Toaster />
                     </ThemeProvider>
