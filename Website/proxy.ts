@@ -11,7 +11,7 @@ export async function proxy(request: NextRequest) {
     const day = new Date(
         new Date().toLocaleString("en-US", { timeZone: "Africa/Cairo" }),
     ).getDay();
-    const isClosedDay = day === 3 || day === 4 || day === 5; // Wed & Thu & Fri
+    const isClosedDay = day === 3 || day === 2 || day === 5; // Wed & Thu & Fri
 
     // ✅ PUBLIC ROUTES FIRST (NO AUTH)
     let token = request.cookies.get("accessToken")?.value;
