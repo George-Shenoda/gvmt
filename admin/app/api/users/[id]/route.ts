@@ -8,7 +8,6 @@ export async function GET(request: Request, {params}: {params: Promise<{id: stri
         const user = await User.findById(id);
         return new Response(JSON.stringify(user));
     }catch(error){
-        console.log(error);
         return new Response("Did not find user", {status: 500});
     }
 }
@@ -20,7 +19,6 @@ export async function PUT(request: Request, {params}: {params: Promise<{id: stri
         const user = await User.findByIdAndUpdate(id, await request.json());
         return new Response(JSON.stringify(user));
     }catch(error){
-        console.log(error);
         return new Response("Did not find user", {status: 500});
     }
 }
@@ -32,7 +30,6 @@ export async function DELETE(request: Request, {params}: {params: Promise<{id: s
         const user = await User.findByIdAndDelete(id);
         return new Response(JSON.stringify(user));
     }catch(error){
-        console.log(error);
         return new Response("Did not find user", {status: 500});
     }
 }

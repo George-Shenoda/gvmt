@@ -41,7 +41,6 @@ async function connectToDB() {
             });
     }
     cached.conn = await cached.promise;
-    console.log("Connected to DB");
     return cached.conn;
 }
 

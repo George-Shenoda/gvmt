@@ -48,7 +48,6 @@ const AddToCart = ({
                 throw new Error("Failed to add to cart");
             }
             const data = await res.json();
-            console.log("PATCH success data:", data);
 
             const cartRes = await fetch("/api/cart", {
                 method: "POST",
@@ -64,7 +63,6 @@ const AddToCart = ({
                 throw new Error("Failed to add to cart");
             }
             const cartData = await cartRes.json();
-            console.log("Cart POST success:", cartData);
 
             return { data, quantity };
         },

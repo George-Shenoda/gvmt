@@ -66,8 +66,6 @@ const page = () => {
 
     const onSubmit = async (formData: AddClothes) => {
         startTransition(() => {
-            console.log("Form Data Ready to Send:", formData);
-            // Send formData to your backend API
             addClothes(formData);
         });
     };

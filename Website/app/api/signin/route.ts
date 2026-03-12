@@ -69,7 +69,6 @@ export const POST = withRateLimit({
             path: "/",
             maxAge: 7 * 24 * 60 * 60, // 7 days
         });
-        console.log("User logged in successfully");
         return response;
     } catch (error) {
         console.error(error);

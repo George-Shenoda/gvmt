@@ -81,7 +81,6 @@ export async function PATCH(
                 { status: 400 },
             );
         }
-        console.log(id, operation, count);
         const cloth = await ClothesModel.findByIdAndUpdate(
             id,
             { $inc: { ordered: increment } },

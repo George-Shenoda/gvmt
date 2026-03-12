@@ -9,7 +9,6 @@ export function startResetOrderedCron() {
             try {
                 await connectToDB();
                 await ClothesModel.updateMany({}, { $set: { ordered: 0 } });
-                console.log("✅ ordered reset to 0 (Friday night)");
             } catch (err) {
                 console.error("❌ reset failed", err);
             }
