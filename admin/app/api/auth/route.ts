@@ -37,6 +37,7 @@ async function refreshAccessToken(refreshToken: string): Promise<string | null> 
             {
                 id: user._id,
                 name: user.name,
+                role: user.role,
             },
             process.env.ACCESS_TOKEN_SECRET!,
             { expiresIn: "15m" }
@@ -58,8 +59,13 @@ export async function GET() {
 
     if (accessToken) {
         try {
-            await jwtVerify(accessToken, secret);
-            return NextResponse.json({ authorized: true });
+            const { payload } = await jwtVerify(accessToken, secret);
+            const {role} = payload;
+
+            return NextResponse.json({
+                authorized: true,
+                role,
+            });
         } catch {
             // Access token expired, try refresh
         }
@@ -82,5 +88,5 @@ export async function GET() {
         }
     }
 
-    return NextResponse.json({ authorized: false });
+    return NextResponse.json({ authorized: false, role: "" });
 }

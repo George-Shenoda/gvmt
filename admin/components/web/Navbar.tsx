@@ -54,25 +54,25 @@ const Navbar = () => {
                             />
                         </Link>
                     </div>
-                    
+
                     <nav className="hidden md:flex items-center gap-6">
-                        <Link 
-                            href="/" 
+                        <Link
+                            href="/"
                             className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
                         >
                             <Package className="h-4 w-4" />
                             الملابس
                         </Link>
-                        <Link 
-                            href="/orders" 
+                        <Link
+                            href="/orders"
                             className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
                         >
                             <ShoppingCart className="h-4 w-4" />
                             الاوردارات
                         </Link>
                         {admin && (
-                            <Link 
-                                href="/admin" 
+                            <Link
+                                href="/admin"
                                 className="text-sm font-medium transition-colors hover:text-primary flex items-center gap-1"
                             >
                                 <Settings className="h-4 w-4" />
@@ -80,20 +80,25 @@ const Navbar = () => {
                             </Link>
                         )}
                     </nav>
-                    
+
                     <div className="flex items-center gap-3">
                         <div className="hidden md:flex items-center gap-2">
                             {!auth && (
                                 <>
                                     <Link
                                         href="/signin"
-                                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                                        className={buttonVariants({
+                                            variant: "outline",
+                                            size: "sm",
+                                        })}
                                     >
                                         تسجيل الدخول
                                     </Link>
                                     <Link
                                         href="/signup"
-                                        className={buttonVariants({ size: "sm" })}
+                                        className={buttonVariants({
+                                            size: "sm",
+                                        })}
                                     >
                                         انشاء حساب
                                     </Link>
@@ -110,7 +115,7 @@ const Navbar = () => {
                             )}
                         </div>
                         <ModeToggle />
-                        <button 
+                        <button
                             className="md:hidden p-2"
                             onClick={() => setOpen(true)}
                         >
@@ -126,7 +131,11 @@ const Navbar = () => {
             >
                 <div className="container mx-auto flex flex-col h-full p-4">
                     <div className="flex justify-between items-center mb-8">
-                        <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+                        <Link
+                            href="/"
+                            className="flex items-center gap-2"
+                            onClick={() => setOpen(false)}
+                        >
                             <Image
                                 src="/logo.png"
                                 alt="GVMT"
@@ -139,18 +148,18 @@ const Navbar = () => {
                             <XIcon className="h-8 w-8" />
                         </button>
                     </div>
-                    
+
                     <nav className="flex flex-col gap-4 text-lg">
-                        <Link 
-                            href="/" 
+                        <Link
+                            href="/"
                             onClick={() => setOpen(false)}
                             className="p-3 rounded-lg hover:bg-primary/10 transition-colors flex items-center gap-2"
                         >
                             <Package className="h-5 w-5" />
                             الملابس
                         </Link>
-                        <Link 
-                            href="/orders" 
+                        <Link
+                            href="/orders"
                             onClick={() => setOpen(false)}
                             className="p-3 rounded-lg hover:bg-primary/10 transition-colors flex items-center gap-2"
                         >
@@ -158,8 +167,8 @@ const Navbar = () => {
                             الاوردارات
                         </Link>
                         {admin && (
-                            <Link 
-                                href="/admin" 
+                            <Link
+                                href="/admin"
                                 onClick={() => setOpen(false)}
                                 className="p-3 rounded-lg hover:bg-primary/10 transition-colors flex items-center gap-2"
                             >
@@ -167,15 +176,17 @@ const Navbar = () => {
                                 لوحة التحكم
                             </Link>
                         )}
-                        
+
                         <div className="border-t my-4"></div>
-                        
+
                         {!auth && (
                             <>
                                 <Link
                                     href="/signin"
                                     onClick={() => setOpen(false)}
-                                    className={buttonVariants({ variant: "outline" })}
+                                    className={buttonVariants({
+                                        variant: "outline",
+                                    })}
                                 >
                                     تسجيل الدخول
                                 </Link>
@@ -189,10 +200,7 @@ const Navbar = () => {
                             </>
                         )}
                         {auth && (
-                            <Button
-                                variant="outline"
-                                onClick={handleLogout}
-                            >
+                            <Button variant="outline" onClick={handleLogout}>
                                 تسجيل الخروج
                             </Button>
                         )}
