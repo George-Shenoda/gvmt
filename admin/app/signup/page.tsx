@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -41,111 +42,133 @@ const SignupPage = () => {
 
     const form = useForm<AdminUserSchemaType>({
         resolver: zodResolver(AdminUserSchema),
-        defaultValues: { password: "", name: "" },
+        defaultValues: { password: "", name: "", role: "user", active: false },
     });
 
     const onSubmit = (data: AdminUserSchemaType) => mutation.mutate(data);
     useEffect(() => {
         if (mutation.isSuccess) {
             toast.success("تم انشاء الحساب");
-            router.push("/");
+            router.push("/signin");
         }
-    }, [mutation.isSuccess]);
+    }, [mutation.isSuccess, router]);
+
     return (
-        <div className="flex flex-col items-center justify-center h-screen">
-            {mutation.isError && (
-                <p className="text-red-500">{mutation.error.message}</p>
-            )}
-            <div className="flex items-center justify-center">
-                <Card className="w-100">
-                    <CardHeader className="text-center">
-                        <CardTitle>انشاء حساب جديد</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <form onSubmit={form.handleSubmit(onSubmit)}>
-                            <Controller
-                                name="name"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <div className="flex flex-col mb-4 gap-3">
-                                        <Label htmlFor="name">اسم المستخدم</Label>
-                                        <Input
-                                            {...field}
-                                            id="name"
-                                        />
-                                        {fieldState.invalid && (
-                                            <p className="text-red-500">
-                                                {fieldState.error?.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-                            />
-
-                            <Controller
-                                name="password"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <div className="flex flex-col mb-4 gap-3">
-                                        <Label htmlFor="password">
-                                            كلمه المرور
-                                        </Label>
-                                        <div className="relative">
-                                            <Input
-                                                id="password"
-                                                type={
-                                                    seePassword
-                                                        ? "text"
-                                                        : "password"
-                                                }
-                                                {...field}
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                className="absolute left-2 top-1/2 -translate-y-1/2 p-0"
-                                                onClick={() =>
-                                                    setSeePassword(!seePassword)
-                                                }
-                                            >
-                                                {seePassword ? (
-                                                    <Eye />
-                                                ) : (
-                                                    <EyeOff />
-                                                )}
-                                            </Button>
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <p className="text-red-500">
-                                                {fieldState.error?.message}
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-                            />
-
-                            <div className="flex gap-2 justify-center">
-                                <Button
-                                    type="submit"
-                                    className="w-1/2"
-                                    disabled={mutation.isPending}
-                                >
-                                    {mutation.isPending && (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    )}
-                                    انشاء حساب
-                                </Button>
-                                <Link
-                                    href="/signin"
-                                    className={`${buttonVariants({ variant: "outline" })} w-1/2`}
-                                >
-                                    تسجيل الدخول
-                                </Link>
-                            </div>
-                        </form>
-                    </CardContent>
-                </Card>
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-background to-primary/5">
+            <div className="mb-8 text-center">
+                <div className="w-16 h-16 mx-auto mb-4">
+                    <Image
+                        src="/logo.png"
+                        alt="GVMT"
+                        width={64}
+                        height={64}
+                        className="rounded-md"
+                    />
+                </div>
+                <h1 className="text-2xl font-bold">GVMT Admin</h1>
+                <p className="text-muted-foreground">لوحة التحكم</p>
             </div>
+            
+            {mutation.isError && (
+                <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                    {mutation.error.message}
+                </div>
+            )}
+            
+            <Card className="w-full max-w-md">
+                <CardHeader className="text-center">
+                    <CardTitle>انشاء حساب جديد</CardTitle>
+                    <CardDescription>انضم لفريق إدارة الكنيسة</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={form.handleSubmit(onSubmit)}>
+                        <Controller
+                            name="name"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <div className="flex flex-col mb-4 gap-3">
+                                    <Label htmlFor="name">اسم المستخدم</Label>
+                                    <Input
+                                        {...field}
+                                        id="name"
+                                    />
+                                    {fieldState.invalid && (
+                                        <p className="text-destructive text-sm">
+                                            {fieldState.error?.message}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        />
+
+                        <Controller
+                            name="password"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <div className="flex flex-col mb-6 gap-3">
+                                    <Label htmlFor="password">
+                                        كلمه المرور
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="password"
+                                            type={
+                                                seePassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            {...field}
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="absolute left-1 top-1/2 -translate-y-1/2 h-auto p-2"
+                                            onClick={() =>
+                                                setSeePassword(!seePassword)
+                                            }
+                                        >
+                                            {seePassword ? (
+                                                <EyeOff className="h-4 w-4" />
+                                            ) : (
+                                                <Eye className="h-4 w-4" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                    {fieldState.invalid && (
+                                        <p className="text-destructive text-sm">
+                                            {fieldState.error?.message}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        />
+
+                        <div className="flex gap-3">
+                            <Button
+                                type="submit"
+                                className="flex-1"
+                                disabled={mutation.isPending}
+                            >
+                                {mutation.isPending && (
+                                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                                )}
+                                انشاء حساب
+                            </Button>
+                            <Link
+                                href="/signin"
+                                className={buttonVariants({ variant: "outline" })}
+                            >
+                                تسجيل الدخول
+                            </Link>
+                        </div>
+                    </form>
+                </CardContent>
+            </Card>
+            
+            <p className="mt-6 text-sm text-muted-foreground">
+                عندك حساب؟ <Link href="/signin" className="text-primary hover:underline">سجل دخول</Link>
+            </p>
         </div>
     );
 };

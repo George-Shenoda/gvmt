@@ -45,7 +45,7 @@ export const POST = withRateLimit({
         const refreshToken = jwt.sign(
             { id: user._id },
             process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: "1d" },
+            { expiresIn: "7d" },
         );
 
         const response = NextResponse.json({ accessToken });

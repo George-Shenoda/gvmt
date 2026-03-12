@@ -35,37 +35,7 @@ export const POST = withRateLimit({
             password: hashedPassword,
             name,
         });
-
-        const accessToken = jwt.sign(
-            { id: user._id, name: user.name },
-            process.env.ACCESS_TOKEN_SECRET!,
-            { expiresIn: "15m" },
-        );
-
-        const refreshToken = jwt.sign(
-            { id: user._id },
-            process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: "1d" },
-        );
-
-        const response = NextResponse.json({ accessToken });
-        response.cookies.set("accessToken", accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            path: "/",
-            maxAge: 15 * 60, // 15 minutes
-        });
-
-        // 🔁 REFRESH TOKEN → rotation endpoint later
-        response.cookies.set("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            path: "/",
-            maxAge: 7 * 24 * 60 * 60, // 7 days
-        });
-        return response;
+        return NextResponse.json({ message: "User created successfully" }, { status: 201 });
     } catch (error) {
         console.error(error);
         return NextResponse.json(

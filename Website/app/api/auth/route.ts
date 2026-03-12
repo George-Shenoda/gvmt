@@ -1,25 +1,86 @@
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import User from "@/models/User";
+import connectToDB from "@/lib/mongodb";
 
 const secret = new TextEncoder().encode(
     process.env.ACCESS_TOKEN_SECRET
 );
 
-export async function GET() {
-    const token = (await cookies()).get("accessToken")?.value;
+interface RefreshTokenPayload extends JwtPayload {
+    id: string;
+}
 
-    if (!token) {
-        return NextResponse.json({ authorized: false });
-    }
-
+async function refreshAccessToken(refreshToken: string): Promise<string | null> {
     try {
-        const { payload } = await jwtVerify(token, secret);
+        let decoded: RefreshTokenPayload;
+        
+        try {
+            decoded = jwt.verify(
+                refreshToken,
+                process.env.REFRESH_TOKEN_SECRET!
+            ) as RefreshTokenPayload;
+        } catch {
+            return null;
+        }
 
-        return NextResponse.json({
-            authorized: true,
-        });
+        await connectToDB();
+        const user = await User.findById(decoded.id).exec();
+
+        if (!user) {
+            return null;
+        }
+
+        const accessToken = jwt.sign(
+            {
+                id: user._id,
+                name: user.name,
+            },
+            process.env.ACCESS_TOKEN_SECRET!,
+            { expiresIn: "15m" }
+        );
+
+        return accessToken;
     } catch {
+        return null;
+    }
+}
+
+export async function GET() {
+    const accessToken = (await cookies()).get("accessToken")?.value;
+    const refreshToken = (await cookies()).get("refreshToken")?.value;
+
+    if (!accessToken && !refreshToken) {
         return NextResponse.json({ authorized: false });
     }
+
+    if (accessToken) {
+        try {
+            await jwtVerify(accessToken, secret);
+            return NextResponse.json({ authorized: true });
+        } catch {
+            // Access token expired, try refresh
+        }
+    }
+
+    // Try to refresh the token
+    if (refreshToken) {
+        const newAccessToken = await refreshAccessToken(refreshToken);
+        
+        if (newAccessToken) {
+            const response = NextResponse.json({ authorized: true });
+            response.cookies.set("accessToken", newAccessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                path: "/",
+                maxAge: 15 * 60,
+            });
+            return response;
+        }
+    }
+
+    return NextResponse.json({ authorized: false });
 }

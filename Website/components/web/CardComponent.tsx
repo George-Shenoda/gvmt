@@ -30,40 +30,72 @@ export default function CardItem() {
         refetchOnMount: true,
     });
 
+    const { data: cartData } = useQuery({
+        queryKey: ["cart"],
+        queryFn: async () => {
+            const res = await fetch("/api/cart");
+            if (!res.ok) return null;
+            return res.json();
+        },
+    });
+
     if (isLoading) {
         return <Loader />;
     }
     if (!clothes || clothes.length === 0 || !isSuccess) {
         return (
-            <div className="container mx-auto w-screen h-[calc(100vh-8rem)] flex items-center justify-center">
-                <h2 className="text-2xl font-bold">مفيش ملابس حاليا</h2>
+            <div className="container mx-auto min-h-[60vh] flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                        <svg className="w-10 h-10 text-primary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground/70">مفيش ملابس حالياً</h2>
+                    <p className="text-muted-foreground">توقعونا قريباً بملابس جديدة</p>
+                </div>
             </div>
         );
     }
     if (isSuccess) {
-        return clothes.map((item) => (
-            <div key={item._id} className="col-span-1">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{item.name}</CardTitle>
-                        <CardDescription>
-                            متاح: {Math.min(item.available - item.ordered, item.max - 0)}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Image
-                            src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
-                            alt={item.name}
-                            width={300}
-                            height={300}
-                            className="w-full h-full object-cover"
-                        />
-                    </CardContent>
-                    <CardFooter className="flex justify-between">
-                        <AddToCart id={item._id} ordered={item.ordered} available={item.available} max={item.max} />
-                    </CardFooter>
-                </Card>
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {clothes.map((item) => {
+                    const cartItem = cartData?.cart?.items?.find((i: { clothesId: string }) => i.clothesId === item._id);
+                    const inCartQty = cartItem?.quantity || 0;
+                    return (
+                        <Card key={item._id} className="overflow-hidden border-primary/20 shadow-md hover:shadow-lg transition-shadow duration-300">
+                            <CardHeader className="pb-3 space-y-2">
+                                <CardTitle className="text-lg font-semibold line-clamp-1">{item.name}</CardTitle>
+                                <CardDescription className="flex items-center gap-2">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                        متاح: {Math.min(item.available - item.ordered, item.max - inCartQty)}
+                                    </span>
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="aspect-square relative overflow-hidden bg-muted">
+                                    <Image
+                                        src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
+                                        alt={item.name}
+                                        fill
+                                        className="object-cover hover:scale-105 transition-transform duration-500"
+                                    />
+                                </div>
+                            </CardContent>
+                            <CardFooter className="pt-4">
+                                <AddToCart 
+                                    id={item._id} 
+                                    ordered={item.ordered} 
+                                    available={item.available} 
+                                    max={item.max} 
+                                    incart={inCartQty}
+                                />
+                            </CardFooter>
+                        </Card>
+                    );
+                })}
             </div>
-        ));
+        );
     }
 }

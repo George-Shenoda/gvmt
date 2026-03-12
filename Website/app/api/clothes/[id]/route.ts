@@ -6,7 +6,7 @@ import { Binary } from "mongodb";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } },
+    { params }: { params: Promise<{ id: string }> },
 ) {
     const { id } = await params;
 
@@ -67,10 +67,11 @@ export async function GET(
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } },
+    { params }: { params: Promise<{ id: string }> },
 ) {
     const { id } = await params;
-    const { operation } = await request.json();
+    const { operation, count } = await request.json();
+    const increment = operation === "add" ? (count || 1) : (operation === "remove" ? -(count || 1) : 0);
     try {
         await connectToDB();
 
@@ -80,10 +81,10 @@ export async function PATCH(
                 { status: 400 },
             );
         }
-        console.log(id, operation);
+        console.log(id, operation, count);
         const cloth = await ClothesModel.findByIdAndUpdate(
             id,
-            { $inc: { ordered: operation === "add" ? 1 : -1 } },
+            { $inc: { ordered: increment } },
             { new: true },
         )
             .lean()
@@ -131,10 +132,10 @@ export async function PATCH(
             },
             { status: 200 },
         );
-    } catch (error: any) {
+    } catch (error) {
         console.error(error);
         return NextResponse.json(
-            { error: `Failed to update clothes: ${error.message}` },
+            { error: `Failed to update clothes: ${error instanceof Error ? error.message : "Unknown error"}` },
             { status: 500 },
         );
     }

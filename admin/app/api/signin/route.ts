@@ -29,6 +29,13 @@ export const POST = withRateLimit({
             );
         }
 
+        if (!existingUser.active) {
+            return NextResponse.json(
+                { message: "User is not active" },
+                { status: 403 },
+            );
+        }
+
         const existingUserPassword = await bcrypt.compare(
             password,
             existingUser.password,
@@ -41,7 +48,7 @@ export const POST = withRateLimit({
         }
 
         const accessToken = jwt.sign(
-            { id: existingUser._id, name: existingUser.name },
+            { id: existingUser._id, name: existingUser.name, role: existingUser.role },
             process.env.ACCESS_TOKEN_SECRET!,
             { expiresIn: "15m" },
         );
@@ -49,7 +56,7 @@ export const POST = withRateLimit({
         const refreshToken = jwt.sign(
             { id: existingUser._id },
             process.env.REFRESH_TOKEN_SECRET!,
-            { expiresIn: "1d" },
+            { expiresIn: "7d" },
         );
 
         const response = NextResponse.json({ accessToken });

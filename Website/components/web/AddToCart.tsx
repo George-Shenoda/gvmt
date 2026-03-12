@@ -15,13 +15,16 @@ const AddToCart = ({
     ordered,
     available,
     max,
+    incart,
 }: {
     id: string;
     ordered: number;
     available: number;
     max: number;
+    incart: number;
 }) => {
     const [authorized, setAuth] = useState(false);
+    const [localQuantity, setLocalQuantity] = useState(0);
 
     useEffect(() => {
         fetch("/api/auth", {
@@ -32,22 +35,40 @@ const AddToCart = ({
             .catch(() => setAuth(false));
     }, []);
     const queryClient = useQueryClient();
+
     const mutation = useMutation({
-        mutationFn: async (id: string) => {
+        mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
             const res = await fetch(`/api/clothes/${id}`, {
                 method: "PATCH",
-                body: JSON.stringify({ operation: "add" }),
+                body: JSON.stringify({ operation: "add", count: quantity }),
             });
             if (!res.ok) {
                 const text = await res.text();
-                console.error("POST failed:", text);
+                console.error("PATCH failed:", text);
                 throw new Error("Failed to add to cart");
             }
             const data = await res.json();
-            console.log("POST success data:", data);
-            return data;
+            console.log("PATCH success data:", data);
+
+            const cartRes = await fetch("/api/cart", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items: [{ clothesId: id, quantity }],
+                    operation: "add",
+                }),
+            });
+            if (!cartRes.ok) {
+                const text = await cartRes.text();
+                console.error("Cart POST failed:", text);
+                throw new Error("Failed to add to cart");
+            }
+            const cartData = await cartRes.json();
+            console.log("Cart POST success:", cartData);
+
+            return { data, quantity };
         },
-        onSuccess: (data) => {
+        onSuccess: ({ data, quantity }) => {
             queryClient.setQueryData<Clothes[]>(["clothes"], (old) => {
                 if (!old) return [];
                 return old.map((cloth) =>
@@ -56,29 +77,44 @@ const AddToCart = ({
                         : cloth,
                 );
             });
-            toast.success("Added to cart");
+            queryClient.invalidateQueries({ queryKey: ["cart"] });
+            toast.success(`Added ${quantity} to cart`);
+            setLocalQuantity(0);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             console.error("Mutation onError:", error);
             toast.error(error.message);
         },
     });
 
-    const handleClick = () => {
-        mutation.mutate(id);
+    const handleClick = async () => {
+        const remaining = Math.min(available - ordered, max - incart);
+        if (remaining <= 0) {
+            toast.error("لا يمكن اضافة المزيد من هذا العنصر");
+            return;
+        }
+        const newQuantity = localQuantity + 1;
+        setLocalQuantity(newQuantity);
+        try {
+            await mutation.mutateAsync({ id, quantity: newQuantity });
+        } catch {
+            // Error handled in onError
+        }
     };
+
+    const remaining = Math.min(available - ordered, max - incart);
     return authorized ? (
         <Button
             onClick={handleClick}
-            className={`w-full ${Math.min(available - ordered, max - 0) >= 0 ? "cursor-pointer" : "cursor-not-allowed"}`}
-            disabled={Math.min(available - ordered, max - 0) <= 0}
+            className={`w-full ${remaining >= 0 ? "cursor-pointer" : "cursor-not-allowed"}`}
+            disabled={remaining <= 0}
         >
-            اضف للسلة
+            اضف للسلة {localQuantity > 0 ? `(${localQuantity})` : ""}
         </Button>
     ) : (
         <Link
             href="/signin"
-            className={`w-full ${Math.min(available - ordered, max - 0) >= 0 ? "cursor-pointer" : "cursor-not-allowed"} ${buttonVariants()}`}
+            className={`w-full ${remaining >= 0 ? "cursor-pointer" : "cursor-not-allowed"} ${buttonVariants()}`}
         >
             اضف للسلة
         </Link>

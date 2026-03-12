@@ -13,9 +13,9 @@ export const GET = withRateLimit({
     limit: 5,
 })(async (request: NextRequest) => {
     try {
-        const refreshToken = request.cookies.get("refreshToken")?.value;
-
-        if (!refreshToken) {
+        const refToken = await (request.cookies.get("refreshToken")?.value)?.trim();
+        
+        if (!refToken) {
             return NextResponse.json(
                 { message: "Unauthorized" },
                 { status: 401 }
@@ -26,7 +26,7 @@ export const GET = withRateLimit({
 
         try {
             decoded = jwt.verify(
-                refreshToken,
+                refToken,
                 process.env.REFRESH_TOKEN_SECRET!
             ) as RefreshTokenPayload;
         } catch {
@@ -37,7 +37,6 @@ export const GET = withRateLimit({
         }
 
         await connectToDB();
-
         const user = await User.findById(decoded.id).exec();
 
         if (!user) {
@@ -51,20 +50,19 @@ export const GET = withRateLimit({
             {
                 id: user._id,
                 name: user.name,
+                role: user.role,
             },
             process.env.ACCESS_TOKEN_SECRET!,
             { expiresIn: "15m" }
         );
 
-        const response = NextResponse.json({ success: true });
-
-        // ✅ IMPORTANT: set new access token cookie
+        const response = NextResponse.json({ accessToken });
         response.cookies.set("accessToken", accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
             path: "/",
-            maxAge: 15 * 60,
+            maxAge: 15 * 60, // 15 minutes
         });
 
         return response;

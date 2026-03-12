@@ -11,6 +11,6 @@ export const ClothesSchema = new Schema({
     ordered: Number,
 });
 
-const ClothesModel = mongoose.models.clothes || model("clothes", ClothesSchema);
+const Clothes = mongoose.models.Clothes || model("Clothes", ClothesSchema);
 
-export default ClothesModel;
+export default Clothes;
