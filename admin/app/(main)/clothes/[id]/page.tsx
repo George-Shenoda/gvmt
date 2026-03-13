@@ -164,6 +164,7 @@ const page = () => {
                                                 }
                                                 placeholder="الحد الأقصى"
                                                 type="number"
+                                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
                                             />
                                             {fieldState.error && (
                                                 <FieldError
@@ -188,6 +189,7 @@ const page = () => {
                                                 }
                                                 placeholder="المتاح"
                                                 type="number"
+                                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
                                             />
                                             {fieldState.error && (
                                                 <FieldError
