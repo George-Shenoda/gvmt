@@ -158,14 +158,12 @@ const page = () => {
                                         <Field>
                                             <FieldLabel>الحد الأقصى</FieldLabel>
                                             <Input
+                                                type="number"
                                                 {...field}
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="الحد الأقصى"
-                                                type="number"
-                                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                                            />
+                                                />
                                             {fieldState.error && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
@@ -183,14 +181,12 @@ const page = () => {
                                         <Field>
                                             <FieldLabel>المتاح</FieldLabel>
                                             <Input
+                                                type="number"
                                                 {...field}
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="المتاح"
-                                                type="number"
-                                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                                            />
+                                                />
                                             {fieldState.error && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
