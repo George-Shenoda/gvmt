@@ -30,6 +30,7 @@ import { toast } from "sonner";
 
 const page = () => {
     const form = useForm({
+        resolver: zodResolver(ClothesSchema)
         defaultValues: {
             _id: "",
             name: "",
