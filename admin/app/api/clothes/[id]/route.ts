@@ -107,3 +107,31 @@ export async function PATCH(
         );
     }
 }
+
+export async function DELETE(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> },
+) {
+    const { id } = await params;
+
+    try {
+        await connectToDB();
+
+        const deletedCloth = await ClothesModel.findByIdAndDelete(id);
+
+        if (!deletedCloth) {
+            return NextResponse.json(
+                { error: "Clothes not found" },
+                { status: 404 },
+            );
+        }
+
+        return NextResponse.json({ message: "Clothes deleted successfully" }, { status: 200 });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json(
+            { error: `Failed to delete clothes ${error}` },
+            { status: 500 },
+        );
+    }
+}

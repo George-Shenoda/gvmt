@@ -168,8 +168,11 @@ const SignupPage = () => {
                 </CardContent>
             </Card>
             
-            <p className="mt-6 text-sm text-muted-foreground">
+            <p className="mt-4 text-sm text-muted-foreground">
                 اول مرة؟ <Link href="/signup" className="text-primary hover:underline">انشئ حساب</Link>
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+                <Link href="/forgot-password" className="text-primary hover:underline">نسيت كلمة المرور؟</Link>
             </p>
         </div>
     );

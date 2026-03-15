@@ -12,7 +12,15 @@ export const ClothesSchema = z.object({
     ordered: z.number().min(0),
 });
 
+export const EditClothesSchema = ClothesSchema.omit({ image: true }).extend({
+    image: z.object({
+        data: z.instanceof(Buffer),
+        contentType: z.string(),
+    }).optional(),
+});
+
 export const AddClothesSchema = ClothesSchema.omit({ _id: true, ordered: true });
 
 export type Clothes = z.infer<typeof ClothesSchema>;
 export type AddClothes = z.infer<typeof AddClothesSchema>;
+export type EditClothes = z.infer<typeof EditClothesSchema>;

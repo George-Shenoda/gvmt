@@ -29,6 +29,8 @@ const UserSchema = new Schema({
         unique: true,
         required: true,
     },
+    resetToken: String,
+    resetTokenExpiry: Date,
 });
 
 const User = mongoose.models.User || model("User", UserSchema);

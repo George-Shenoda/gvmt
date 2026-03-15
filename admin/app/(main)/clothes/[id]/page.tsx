@@ -16,59 +16,84 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AddClothes, Clothes, ClothesSchema } from "@/schema/ClothesSchemas";
+import { Clothes, EditClothesSchema, EditClothes } from "@/schema/ClothesSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { notFound, useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useEffect, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-// import z from "zod";
 
 const page = () => {
+    const [hasNewImage, setHasNewImage] = useState(false);
+    const [existingImage, setExistingImage] = useState<{ data: string; contentType: string } | null>(null);
+    
     const form = useForm({
-        resolver: zodResolver(ClothesSchema),
         defaultValues: {
             _id: "",
             name: "",
-            image: { data: Buffer.from([]), contentType: "" },
             max: 0,
             available: 0,
             ordered: 0,
+            image: {
+                data: Buffer.from("", "base64"),
+                contentType: "",
+            },
         },
     });
 
     const params = useParams();
     const [isPending, startTransition] = useTransition();
-    const router = useRouter()
+    const router = useRouter();
     const id = params.id as string;
-    const { mutateAsync: addClothes } = useMutation({
-        mutationFn: async (formData: AddClothes) => {
+    const { mutateAsync: updateClothes } = useMutation({
+        mutationFn: async (formData: EditClothes) => {
+            const updateData: Record<string, unknown> = {
+                name: formData.name,
+                max: formData.max,
+                available: formData.available,
+            };
+
+            if (hasNewImage && formData.image) {
+                updateData.image = {
+                    data: formData.image.data.toString("base64"),
+                    contentType: formData.image.contentType,
+                };
+            }
+
             const res = await fetch(`/api/clothes/${id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    ...formData,
-                    // convert Buffer to base64 string to send over JSON
-                    image: {
-                        data: formData.image.data.toString("base64"),
-                        contentType: formData.image.contentType,
-                    },
-                }),
+                body: JSON.stringify(updateData),
             });
-            if (!res.ok) throw new Error("Failed to add clothes");
+            if (!res.ok) throw new Error("Failed to update clothes");
             return res.json();
         },
         onSuccess: () => {
-            toast.success("تم إضافة الملابس");
+            toast.success("تم تحديث الملابس");
             router.push("/");
         },
     });
+
+    const { mutateAsync: deleteClothes } = useMutation({
+        mutationFn: async () => {
+            const res = await fetch(`/api/clothes/${id}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) throw new Error("Failed to delete clothes");
+            return res.json();
+        },
+        onSuccess: () => {
+            toast.success("تم حذف الملابس");
+            router.push("/");
+        },
+    });
+
     const {
         data: cloth,
         isError,
@@ -85,25 +110,47 @@ const page = () => {
     });
     useEffect(() => {
         if (cloth) {
-            form.reset(cloth);
+            const { image: _, ...rest } = cloth;
+            form.reset({
+                ...rest,
+                max: Number(rest.max),
+                available: Number(rest.available),
+                ordered: Number(rest.ordered),
+            });
+            setExistingImage({
+                data: cloth.image.data.toString("base64"),
+                contentType: cloth.image.contentType,
+            });
         }
     }, [cloth]);
 
-    // 1️⃣ Show loader while fetching
     if (isLoading) {
         return <Loading />;
     }
 
-    // 2️⃣ Handle error / not found after loading
     if (isError || !cloth) {
         notFound();
     }
 
-    const onSubmit = async (formData: Clothes) => {
+    const onSubmit = async (formData: EditClothes) => {
         startTransition(() => {
-            addClothes(formData);
+            updateClothes(formData);
         });
     };
+
+    const handleDelete = () => {
+        if (confirm("هل أنت متأكد من حذف هذا الملء؟")) {
+            startTransition(() => {
+                deleteClothes();
+            });
+        }
+    };
+
+    const currentImage = hasNewImage && form.getValues("image")?.data?.length! > 0
+        ? `data:${form.getValues("image")?.contentType};base64,${form.getValues("image")?.data.toString("base64")}`
+        : existingImage
+            ? `data:${existingImage.contentType};base64,${existingImage.data}`
+            : null;
 
     return (
         <div className="py-12">
@@ -116,12 +163,14 @@ const page = () => {
                 <CardHeader>
                     <CardTitle>تعديل اللبس</CardTitle>
                     <CardDescription className="flex justify-center">
-                        <Image
-                            src={`data:${cloth.image.contentType};base64,${cloth.image.data.toString("base64")}`}
-                            alt={cloth.name}
-                            width={300}
-                            height={300}
-                        />
+                        {currentImage && (
+                            <Image
+                                src={currentImage}
+                                alt={cloth.name}
+                                width={300}
+                                height={300}
+                            />
+                        )}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -163,7 +212,12 @@ const page = () => {
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                />
+                                                onChange={(e) => {
+                                                    field.onChange(
+                                                        Number(e.target.value),
+                                                    );
+                                                }}
+                                            />
                                             {fieldState.error && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
@@ -186,7 +240,12 @@ const page = () => {
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                />
+                                                onChange={(e) => {
+                                                    field.onChange(
+                                                        Number(e.target.value),
+                                                    );
+                                                }}
+                                            />
                                             {fieldState.error && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
@@ -202,7 +261,7 @@ const page = () => {
                                 render={({ field, fieldState }) => {
                                     return (
                                         <Field>
-                                            <FieldLabel>الصورة</FieldLabel>
+                                            <FieldLabel>الصورة (اختياري - اتركه فارغاً للاحتفاظ بالصورة الحالية)</FieldLabel>
                                             <Input
                                                 accept="image/*"
                                                 type="file"
@@ -210,6 +269,7 @@ const page = () => {
                                                     const file =
                                                         e.target.files?.[0];
                                                     if (file) {
+                                                        setHasNewImage(true);
                                                         const arrayBuffer =
                                                             await file.arrayBuffer();
                                                         const buffer =
@@ -233,16 +293,26 @@ const page = () => {
                                     );
                                 }}
                             />
-                            <Button disabled={isPending}>
-                                {isPending ? (
-                                    <>
-                                        <Loader2 className="size-4 animate-spin" />{" "}
-                                        <span>تحديث...</span>
-                                    </>
-                                ) : (
-                                    "تحديث"
-                                )}
-                            </Button>
+                            <div className="flex gap-3">
+                                <Button type="submit" disabled={isPending} className="flex-1">
+                                    {isPending ? (
+                                        <>
+                                            <Loader2 className="size-4 animate-spin" />{" "}
+                                            <span>تحديث...</span>
+                                        </>
+                                    ) : (
+                                        "تحديث"
+                                    )}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={handleDelete}
+                                    disabled={isPending}
+                                >
+                                    <Trash2 className="size-4" />
+                                </Button>
+                            </div>
                         </FieldGroup>
                     </form>
                 </CardContent>

@@ -18,7 +18,9 @@ const AdminUserSchema = new Schema({
         type: String,
         enum: ["admin", "user"],
         default: "user"
-    }
+    },
+    resetToken: String,
+    resetTokenExpiry: Date,
 })
 
 export const AdminUser = mongoose.models.AdminUser || model("AdminUser", AdminUserSchema);

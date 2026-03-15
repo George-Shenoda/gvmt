@@ -2,6 +2,7 @@
 import { Clothes } from "@/schema/ClothesSchemas";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
+import { useState } from "react";
 import {
     Card,
     CardContent,
@@ -10,10 +11,13 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import Loader from "./ClothesLoader";
 import AddToCart from "./AddToCart";
 
 export default function CardItem() {
+    const [searchQuery, setSearchQuery] = useState("");
+
     const {
         data: clothes,
         isLoading,
@@ -39,6 +43,10 @@ export default function CardItem() {
         },
     });
 
+    const filteredClothes = clothes?.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+
     if (isLoading) {
         return <Loader />;
     }
@@ -57,44 +65,64 @@ export default function CardItem() {
             </div>
         );
     }
+
     if (isSuccess) {
         return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {clothes.map((item) => {
-                    const cartItem = cartData?.cart?.items?.find((i: { clothesId: string }) => i.clothesId === item._id);
-                    const inCartQty = cartItem?.quantity || 0;
-                    return (
-                        <Card key={item._id} className="overflow-hidden border-primary/20 shadow-md hover:shadow-lg transition-shadow duration-300">
-                            <CardHeader className="pb-3 space-y-2">
-                                <CardTitle className="text-lg font-semibold line-clamp-1">{item.name}</CardTitle>
-                                <CardDescription className="flex items-center gap-2">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                        متاح: {Math.min(item.available - item.ordered, item.max - inCartQty)}
-                                    </span>
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                <div className="aspect-square relative overflow-hidden bg-muted">
-                                    <Image
-                                        src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
-                                        alt={item.name}
-                                        fill
-                                        className="object-cover hover:scale-105 transition-transform duration-500"
-                                    />
-                                </div>
-                            </CardContent>
-                            <CardFooter className="pt-4">
-                                <AddToCart 
-                                    id={item._id} 
-                                    ordered={item.ordered} 
-                                    available={item.available} 
-                                    max={item.max} 
-                                    incart={inCartQty}
-                                />
-                            </CardFooter>
-                        </Card>
-                    );
-                })}
+            <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                        <Input
+                            placeholder="البحث بالاسم..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full"
+                        />
+                    </div>
+                </div>
+
+                {filteredClothes.length === 0 ? (
+                    <div className="text-center py-12">
+                        <p className="text-muted-foreground">لا توجد نتائج تطابق بحثك</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {filteredClothes.map((item) => {
+                            const cartItem = cartData?.cart?.items?.find((i: { clothesId: string }) => i.clothesId === item._id);
+                            const inCartQty = cartItem?.quantity || 0;
+                            return (
+                                <Card key={item._id} className="overflow-hidden border-primary/20 shadow-md hover:shadow-lg transition-shadow duration-300">
+                                    <CardHeader className="pb-3 space-y-2">
+                                        <CardTitle className="text-lg font-semibold line-clamp-1">{item.name}</CardTitle>
+                                        <CardDescription className="flex items-center gap-2">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                                متاح: {Math.min(item.available - item.ordered, item.max - inCartQty)}
+                                            </span>
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="p-0">
+                                        <div className="aspect-square relative overflow-hidden bg-muted">
+                                            <Image
+                                                src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
+                                                alt={item.name}
+                                                fill
+                                                className="object-cover hover:scale-105 transition-transform duration-500"
+                                            />
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className="pt-4">
+                                        <AddToCart 
+                                            id={item._id} 
+                                            ordered={item.ordered} 
+                                            available={item.available} 
+                                            max={item.max} 
+                                            incart={inCartQty}
+                                        />
+                                    </CardFooter>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         );
     }
