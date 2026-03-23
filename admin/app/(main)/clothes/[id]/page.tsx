@@ -109,12 +109,12 @@ export default function EditClothesPage() {
 
     useEffect(() => {
         if (cloth) {
-            const { image: _image, ...rest } = cloth;
             form.reset({
-                ...rest,
-                max: Number(rest.max),
-                available: Number(rest.available),
-                ordered: Number(rest.ordered),
+                name: cloth.name,
+                _id: cloth._id,
+                max: Number(cloth.max),
+                available: Number(cloth.available),
+                ordered: Number(cloth.ordered),
             });
         }
     }, [cloth, form]);

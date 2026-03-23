@@ -21,27 +21,37 @@ function getNextFridayDate(): string {
 
 async function recalculateOrdered() {
     const fridayDate = getNextFridayDate();
-    
-    const submittedCarts = await Cart.find({ submitted: true, fridayDate }).lean();
-    
+
+    const orderedAggregation = await Cart.aggregate([
+        { $match: { submitted: true, fridayDate } },
+        { $unwind: "$items" },
+        { $group: { _id: "$items.clothesId", ordered: { $sum: "$items.quantity" } } },
+    ]);
+
     const orderedByCloth: Record<string, number> = {};
-    
-    for (const cart of submittedCarts) {
-        for (const item of cart.items) {
-            const clothId = item.clothesId.toString();
-            orderedByCloth[clothId] = (orderedByCloth[clothId] || 0) + item.quantity;
-        }
+    for (const item of orderedAggregation) {
+        orderedByCloth[item._id.toString()] = item.ordered;
     }
-    
+
+    const { Types } = await import("mongoose");
+    const bulkOps = [];
     for (const [clothId, ordered] of Object.entries(orderedByCloth)) {
-        await Clothes.findByIdAndUpdate(clothId, { ordered });
+        bulkOps.push({
+            updateOne: {
+                filter: { _id: new Types.ObjectId(clothId) },
+                update: { $set: { ordered } },
+            },
+        });
     }
-    
-    const allClothes = await Clothes.find().lean();
-    for (const cloth of allClothes) {
-        if (!orderedByCloth[cloth._id.toString()]) {
-            await Clothes.findByIdAndUpdate(cloth._id, { ordered: 0 });
-        }
+    bulkOps.push({
+        updateMany: {
+            filter: { _id: { $nin: Object.keys(orderedByCloth).map(id => new Types.ObjectId(id)) } },
+            update: { $set: { ordered: 0 } },
+        },
+    });
+
+    if (bulkOps.length > 0) {
+        await Clothes.bulkWrite(bulkOps);
     }
 }
 

@@ -6,6 +6,7 @@ import User from "@/models/User";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { withRateLimit } from "next-limitr";
+import { addSecurityHeaders } from "@/lib/securityHeaders";
 
 export const POST = withRateLimit({
     windowMs: 60 * 1000,
@@ -57,7 +58,6 @@ export const POST = withRateLimit({
             maxAge: 15 * 60, // 15 minutes
         });
 
-        // 🔁 REFRESH TOKEN → rotation endpoint later
         response.cookies.set("refreshToken", refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -65,7 +65,7 @@ export const POST = withRateLimit({
             path: "/",
             maxAge: 7 * 24 * 60 * 60, // 7 days
         });
-        return response;
+        return addSecurityHeaders(response);
     } catch (error) {
         console.error(error);
         return NextResponse.json(

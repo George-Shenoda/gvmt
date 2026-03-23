@@ -6,7 +6,7 @@ export async function GET() {
         await connectToDB();
         const users = await User.find({});
         return new Response(JSON.stringify(users));
-    }catch(error){
+    }catch{
         return new Response("Internal Server Error", {status: 500});
     }
 }

@@ -28,10 +28,14 @@ const UserSchema = new Schema({
         ],
         unique: true,
         required: true,
+        index: true,
     },
     resetToken: String,
     resetTokenExpiry: Date,
 });
+
+UserSchema.index({ resetToken: 1 });
+UserSchema.index({ resetTokenExpiry: 1 });
 
 const User = mongoose.models.User || model("User", UserSchema);
 

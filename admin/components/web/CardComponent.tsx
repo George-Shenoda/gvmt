@@ -1,7 +1,6 @@
 "use client";
-import { Clothes, ClothesSchema } from "@/schema/ClothesSchemas";
+import { Clothes } from "@/schema/ClothesSchemas";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
 

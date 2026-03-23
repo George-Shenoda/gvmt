@@ -3,6 +3,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import User from "@/models/User";
 import connectToDB from "@/lib/mongodb";
 import { withRateLimit } from "next-limitr";
+import { addSecurityHeaders } from "@/lib/securityHeaders";
 
 interface RefreshTokenPayload extends JwtPayload {
     id: string;
@@ -64,7 +65,7 @@ export const GET = withRateLimit({
             maxAge: 15 * 60, // 15 minutes
         });
 
-        return response;
+        return addSecurityHeaders(response);
     } catch (error) {
         console.error(error);
         return NextResponse.json(

@@ -126,10 +126,12 @@ export async function POST(request: Request) {
             });
         }
 
+        const itemMap = new Map<string, CartItem>(
+            cart.items.map((i: CartItem) => [i.clothesId.toString(), i]),
+        );
+
         for (const item of items) {
-            const existingItem = cart.items.find(
-                (i: CartItem) => i.clothesId.toString() === item.clothesId,
-            );
+            const existingItem = itemMap.get(item.clothesId);
 
             if (existingItem) {
                 if (item.quantity === 0) {
@@ -137,16 +139,19 @@ export async function POST(request: Request) {
                         (i: CartItem) =>
                             i.clothesId.toString() !== item.clothesId,
                     );
+                    itemMap.delete(item.clothesId);
                 } else {
                     if (operation === "add") {
                         existingItem.quantity += item.quantity;
                     } else existingItem.quantity = item.quantity;
                 }
             } else if (item.quantity > 0) {
-                cart.items.push({
+                const newItem: CartItem = {
                     clothesId: new Types.ObjectId(item.clothesId),
                     quantity: item.quantity,
-                });
+                };
+                cart.items.push(newItem);
+                itemMap.set(item.clothesId, newItem);
             }
         }
 

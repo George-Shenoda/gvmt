@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ChevronDown, ChevronUp, Pencil, Save, X } from "lucide-react";
@@ -41,7 +41,7 @@ const OrdersPage = () => {
     const [editedItems, setEditedItems] = useState<OrderItem[]>([]);
     const [showAllCarts, setShowAllCarts] = useState(false);
 
-    const fetchOrders = () => {
+    const fetchOrders = useCallback(() => {
         fetch(`/api/orders?all=${showAllCarts}`)
             .then((res) => res.json())
             .then((data) => {
@@ -55,11 +55,11 @@ const OrdersPage = () => {
                 console.error("Failed to fetch orders:", err);
                 setIsLoading(false);
             });
-    };
+    }, [showAllCarts]);
 
     useEffect(() => {
         fetchOrders();
-    }, [showAllCarts]);
+    }, [fetchOrders]);
 
     const updateCartMutation = useMutation({
         mutationFn: async (data: { cartId: string; items: OrderItem[]; action: string }) => {

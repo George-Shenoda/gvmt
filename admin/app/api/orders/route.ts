@@ -75,33 +75,35 @@ function getNextFridayDate(): string {
 async function recalculateOrdered() {
     const fridayDate = getNextFridayDate();
 
-    const submittedCarts = await Cart.find({
-        submitted: true,
-        fridayDate,
-    }).lean();
+    const orderedAggregation = await Cart.aggregate([
+        { $match: { submitted: true, fridayDate } },
+        { $unwind: "$items" },
+        { $group: { _id: "$items.clothesId", ordered: { $sum: "$items.quantity" } } },
+    ]);
 
     const orderedByCloth: Record<string, number> = {};
-
-    for (const cart of submittedCarts) {
-        for (const item of cart.items as unknown as {
-            clothesId: mongoose.Types.ObjectId;
-            quantity: number;
-        }[]) {
-            const clothId = item.clothesId.toString();
-            orderedByCloth[clothId] =
-                (orderedByCloth[clothId] || 0) + item.quantity;
-        }
+    for (const item of orderedAggregation) {
+        orderedByCloth[item._id.toString()] = item.ordered;
     }
 
+    const bulkOps = [];
     for (const [clothId, ordered] of Object.entries(orderedByCloth)) {
-        await Clothes.findByIdAndUpdate(clothId, { ordered });
+        bulkOps.push({
+            updateOne: {
+                filter: { _id: new mongoose.Types.ObjectId(clothId) },
+                update: { $set: { ordered } },
+            },
+        });
     }
+    bulkOps.push({
+        updateMany: {
+            filter: { _id: { $nin: Object.keys(orderedByCloth).map(id => new mongoose.Types.ObjectId(id)) } },
+            update: { $set: { ordered: 0 } },
+        },
+    });
 
-    const allClothes = await Clothes.find().lean();
-    for (const cloth of allClothes) {
-        if (!orderedByCloth[cloth._id.toString()]) {
-            await Clothes.findByIdAndUpdate(cloth._id, { ordered: 0 });
-        }
+    if (bulkOps.length > 0) {
+        await Clothes.bulkWrite(bulkOps);
     }
 }
 
@@ -117,8 +119,8 @@ export async function GET(request: Request) {
         const query = allCarts ? {} : { submitted: true };
 
         const carts = await Cart.find(query)
-            .populate({ path: "userId", model: User })
-            .populate("items.clothesId")
+            .populate({ path: "userId", model: User, select: "role" })
+            .populate({ path: "items.clothesId", model: Clothes, select: "name" })
             .sort({ fridayDate: -1 })
             .lean();
 

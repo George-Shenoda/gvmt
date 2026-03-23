@@ -3,9 +3,8 @@ import connectToDB from "@/lib/mongodb";
 import { AdminUserSchema as UserSchema } from "@/schema/AdminUsersSchemas";
 import { NextResponse } from "next/server";
 import User from "@/models/AdminUsers";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 import { withRateLimit } from "next-limitr";
+import { addSecurityHeaders } from "@/lib/securityHeaders";
 
 export const POST = withRateLimit({
     windowMs: 60 * 1000,
@@ -30,12 +29,14 @@ export const POST = withRateLimit({
             );
         }
 
+        const bcrypt = await import("bcrypt");
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await User.create({
+        await User.create({
             password: hashedPassword,
             name,
         });
-        return NextResponse.json({ message: "User created successfully" }, { status: 201 });
+        const response = NextResponse.json({ message: "User created successfully" }, { status: 201 });
+        return addSecurityHeaders(response);
     } catch (error) {
         console.error(error);
         return NextResponse.json(

@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    /* config options here */
+    experimental: {
+        optimizePackageImports: ["lucide-react", "@tanstack/react-query", "sonner", "zod"],
+    },
+    images: {
+        formats: ["image/avif", "image/webp"],
+    },
 };
 
 export default nextConfig;
