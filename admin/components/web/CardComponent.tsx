@@ -18,21 +18,27 @@ import Link from "next/link";
 
 const ClothCard = memo(function ClothCard({ item }: { item: Clothes }) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>{item.name}</CardTitle>
-                <CardDescription>
-                    متوفر: {item.available - item.ordered}
+        <Card className="overflow-hidden border-primary/20 shadow-md hover:shadow-lg transition-shadow duration-300">
+            <CardHeader className="pb-3 space-y-2">
+                <CardTitle className="text-lg font-semibold line-clamp-1">
+                    {item.name}
+                </CardTitle>
+
+                <CardDescription className="flex items-center gap-2">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        متوفر: {item.available - item.ordered}
+                    </span>
                 </CardDescription>
             </CardHeader>
-            <CardContent>
-                <Image
-                    src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
-                    alt={item.name}
-                    width={300}
-                    height={300}
-                    className="w-full h-full object-cover"
-                />
+            <CardContent className="p-0">
+                <div className="aspect-square relative overflow-hidden bg-muted">
+                    <Image
+                        src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
+                        alt={item.name}
+                        fill
+                        className="object-cover hover:scale-105 transition-transform duration-500"
+                    />
+                </div>
             </CardContent>
             <CardFooter className="flex justify-between">
                 <Link

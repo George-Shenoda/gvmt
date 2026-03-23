@@ -39,10 +39,9 @@ const OrdersPage = () => {
     const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
     const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
     const [editedItems, setEditedItems] = useState<OrderItem[]>([]);
-    const [showAllCarts, setShowAllCarts] = useState(false);
 
     const fetchOrders = useCallback(() => {
-        fetch(`/api/orders?all=${showAllCarts}`)
+        fetch(`/api/orders?all=false`)
             .then((res) => res.json())
             .then((data) => {
                 setOrders(data);
@@ -55,7 +54,7 @@ const OrdersPage = () => {
                 console.error("Failed to fetch orders:", err);
                 setIsLoading(false);
             });
-    }, [showAllCarts]);
+    }, []);
 
     useEffect(() => {
         fetchOrders();
@@ -154,12 +153,6 @@ const OrdersPage = () => {
             <div className="container mx-auto py-5 space-y-4">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold">الطلبات</h1>
-                    <Button 
-                        variant={showAllCarts ? "default" : "outline"}
-                        onClick={() => setShowAllCarts(!showAllCarts)}
-                    >
-                        {showAllCarts ? "إظهار الطلبات المقدمة فقط" : "إظهار كل السلات"}
-                    </Button>
                 </div>
                 <Card>
                     <CardHeader>
@@ -175,12 +168,6 @@ const OrdersPage = () => {
         <div className="container mx-auto py-5 space-y-4">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">الطلبات</h1>
-                <Button 
-                    variant={showAllCarts ? "default" : "outline"}
-                    onClick={() => setShowAllCarts(!showAllCarts)}
-                >
-                    {showAllCarts ? "إظهار الطلبات المقدمة فقط" : "إظهار كل السلات"}
-                </Button>
             </div>
             
             {orders.map((orderGroup) => (
