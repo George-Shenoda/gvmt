@@ -4,7 +4,7 @@ import { jwtVerify } from "jose";
 
 const secret = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const PUBLIC_FILE = /\.(.*)$/;
     const { pathname } = request.nextUrl;
 

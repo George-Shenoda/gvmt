@@ -5,7 +5,6 @@ export const ClothesSchema = new Schema({
         type: String, 
         required: true, 
         unique: true,
-        index: true,
     },
     image: {
         data: Buffer,
@@ -15,8 +14,6 @@ export const ClothesSchema = new Schema({
     available: Number,
     ordered: Number,
 });
-
-ClothesSchema.index({ name: 1 });
 
 const ClothesModel = mongoose.models.clothes || model("clothes", ClothesSchema);
 

@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -10,7 +11,7 @@ type AuthState = {
     authorized: boolean;
 };
 
-const AddToCart = ({
+const AddToCart = memo(function AddToCart({
     id,
     ordered,
     available,
@@ -22,7 +23,7 @@ const AddToCart = ({
     available: number;
     max: number;
     incart: number;
-}) => {
+}) {
     const [authorized, setAuth] = useState(false);
     const [localQuantity, setLocalQuantity] = useState(0);
 
@@ -43,8 +44,6 @@ const AddToCart = ({
                 body: JSON.stringify({ operation: "add", count: quantity }),
             });
             if (!res.ok) {
-                const text = await res.text();
-                console.error("PATCH failed:", text);
                 throw new Error("Failed to add to cart");
             }
             const data = await res.json();
@@ -58,8 +57,6 @@ const AddToCart = ({
                 }),
             });
             if (!cartRes.ok) {
-                const text = await cartRes.text();
-                console.error("Cart POST failed:", text);
                 throw new Error("Failed to add to cart");
             }
 
@@ -79,7 +76,6 @@ const AddToCart = ({
             setLocalQuantity(0);
         },
         onError: (error: Error) => {
-            console.error("Mutation onError:", error);
             toast.error(error.message);
         },
     });
@@ -116,6 +112,6 @@ const AddToCart = ({
             اضف للسلة
         </Link>
     );
-};
+});
 
 export default AddToCart;

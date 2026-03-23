@@ -1,4 +1,5 @@
 "use client";
+import { memo } from "react";
 import { Clothes } from "@/schema/ClothesSchemas";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
@@ -14,6 +15,36 @@ import {
 } from "@/components/ui/card";
 import Loader from "./ClothesLoader";
 import Link from "next/link";
+
+const ClothCard = memo(function ClothCard({ item }: { item: Clothes }) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>{item.name}</CardTitle>
+                <CardDescription>
+                    متوفر: {item.available - item.ordered}
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Image
+                    src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
+                    alt={item.name}
+                    width={300}
+                    height={300}
+                    className="w-full h-full object-cover"
+                />
+            </CardContent>
+            <CardFooter className="flex justify-between">
+                <Link
+                    href={`/clothes/${item._id}`}
+                    className={`w-full ${buttonVariants()}`}
+                >
+                    تعديل
+                </Link>
+            </CardFooter>
+        </Card>
+    );
+});
 
 export default function CardItem() {
     const {
@@ -38,39 +69,19 @@ export default function CardItem() {
     if (!clothes || clothes.length === 0 || !isSuccess) {
         return (
             <div className="container mx-auto w-screen h-[calc(100vh-8rem)] flex items-center justify-center">
-                <h2 className="text-2xl font-bold">مفيش لبس حاليا</h2>
+                <h2 className="text-2xl font-bold">مفيش لبس他现在</h2>
             </div>
         );
     }
     if (isSuccess) {
-        return clothes.map((item, index) => (
-            <div key={index} className="col-span-1">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{item.name}</CardTitle>
-                        <CardDescription>
-                            متوفر: {item.available - item.ordered}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Image
-                            src={`data:${item.image.contentType};base64,${item.image.data.toString("base64")}`}
-                            alt={item.name}
-                            width={300}
-                            height={300}
-                            className="w-full h-full object-cover"
-                        />
-                    </CardContent>
-                    <CardFooter className="flex justify-between">
-                        <Link
-                            href={`/clothes/${item._id}`}
-                            className={`w-full ${buttonVariants()}`}
-                        >
-                            تعديل
-                        </Link>
-                    </CardFooter>
-                </Card>
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {clothes.map((item) => (
+                    <div key={item._id} className="col-span-1">
+                        <ClothCard item={item} />
+                    </div>
+                ))}
             </div>
-        ));
+        );
     }
 }

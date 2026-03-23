@@ -3,7 +3,6 @@ import mongoose, { model, Schema } from "mongoose";
 export const ClothesSchema = new Schema({
     name: {
         type: String,
-        index: true,
     },
     image: {
         data: Buffer,
