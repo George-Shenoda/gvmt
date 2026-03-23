@@ -62,7 +62,6 @@ const AddToCart = ({
                 console.error("Cart POST failed:", text);
                 throw new Error("Failed to add to cart");
             }
-            const cartData = await cartRes.json();
 
             return { data, quantity };
         },

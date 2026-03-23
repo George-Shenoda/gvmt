@@ -18,15 +18,18 @@ const CartSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "User",
         required: true,
+        index: true,
     },
     fridayDate: {
         type: String,
         required: true,
+        index: true,
     },
     items: [CartItemSchema],
     submitted: {
         type: Boolean,
         default: false,
+        index: true,
     },
     createdAt: {
         type: Date,
@@ -37,6 +40,9 @@ const CartSchema = new Schema({
         default: Date.now,
     },
 });
+
+CartSchema.index({ userId: 1, fridayDate: 1 });
+CartSchema.index({ submitted: 1, fridayDate: 1 });
 
 const Cart = mongoose.models.Cart || model("Cart", CartSchema);
 

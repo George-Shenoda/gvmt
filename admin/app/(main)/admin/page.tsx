@@ -2,16 +2,14 @@
 import { useState, useEffect } from "react";
 import { AdminUserSchemaType } from "@/schema/AdminUsersSchemas";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button, buttonVariants } from "@/components/ui/button";
-import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-const page = () => {
+export default function AdminPage() {
     const [users, setUsers] = useState<AdminUserSchemaType[]>([]);
     useEffect(() => {
         fetch("/api/users")
@@ -91,7 +89,5 @@ const page = () => {
                 ))}
             </div>
         </div>
-    )
+    );
 }
-
-export default page

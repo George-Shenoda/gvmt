@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clothes, EditClothesSchema, EditClothes } from "@/schema/ClothesSchemas";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { Clothes, EditClothes } from "@/schema/ClothesSchemas";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -27,9 +26,8 @@ import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const page = () => {
+export default function EditClothesPage() {
     const [hasNewImage, setHasNewImage] = useState(false);
-    const [existingImage, setExistingImage] = useState<{ data: string; contentType: string } | null>(null);
     
     const form = useForm({
         defaultValues: {
@@ -108,21 +106,18 @@ const page = () => {
             return res.json();
         },
     });
+
     useEffect(() => {
         if (cloth) {
-            const { image: _, ...rest } = cloth;
+            const { image: _image, ...rest } = cloth;
             form.reset({
                 ...rest,
                 max: Number(rest.max),
                 available: Number(rest.available),
                 ordered: Number(rest.ordered),
             });
-            setExistingImage({
-                data: cloth.image.data.toString("base64"),
-                contentType: cloth.image.contentType,
-            });
         }
-    }, [cloth]);
+    }, [cloth, form]);
 
     if (isLoading) {
         return <Loading />;
@@ -146,10 +141,10 @@ const page = () => {
         }
     };
 
-    const currentImage = hasNewImage && form.getValues("image")?.data?.length! > 0
+    const currentImage = hasNewImage && (form.getValues("image")?.data?.length ?? 0) > 0
         ? `data:${form.getValues("image")?.contentType};base64,${form.getValues("image")?.data.toString("base64")}`
-        : existingImage
-            ? `data:${existingImage.contentType};base64,${existingImage.data}`
+        : cloth?.image?.data
+            ? `data:${cloth.image.contentType};base64,${cloth.image.data.toString("base64")}`
             : null;
 
     return (
@@ -319,9 +314,7 @@ const page = () => {
             </Card>
         </div>
     );
-};
-
-export default page;
+}
 
 const Loading = () => {
     return (

@@ -21,14 +21,16 @@ export async function GET() {
         await connectToDB();
         
         const fridayDate = getNextFridayDate();
-        const submittedCarts = await Cart.find({ submitted: true, fridayDate }).lean();
+        
+        const orderedAggregation = await Cart.aggregate([
+            { $match: { submitted: true, fridayDate } },
+            { $unwind: "$items" },
+            { $group: { _id: "$items.clothesId", ordered: { $sum: "$items.quantity" } } },
+        ]);
         
         const orderedByCloth: Record<string, number> = {};
-        for (const cart of submittedCarts) {
-            for (const item of cart.items) {
-                const clothId = item.clothesId.toString();
-                orderedByCloth[clothId] = (orderedByCloth[clothId] || 0) + item.quantity;
-            }
+        for (const item of orderedAggregation) {
+            orderedByCloth[item._id.toString()] = item.ordered;
         }
 
         const clothes = await ClothesModel.find().lean();

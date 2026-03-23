@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    let token = request.cookies.get("accessToken")?.value;
+    const token = request.cookies.get("accessToken")?.value;
 
     // If no token, redirect to signin
     if (!token) {

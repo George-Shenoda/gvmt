@@ -1,7 +1,12 @@
 import mongoose, { model, Schema } from "mongoose";
 
 export const ClothesSchema = new Schema({
-    name: { type: String, required: true, unique: true },
+    name: { 
+        type: String, 
+        required: true, 
+        unique: true,
+        index: true,
+    },
     image: {
         data: Buffer,
         contentType: String,
@@ -9,8 +14,10 @@ export const ClothesSchema = new Schema({
     max: Number,
     available: Number,
     ordered: Number,
-})
+});
 
-const ClothesModel = mongoose.models.clothes || model("clothes", ClothesSchema)
+ClothesSchema.index({ name: 1 });
 
-export default ClothesModel
+const ClothesModel = mongoose.models.clothes || model("clothes", ClothesSchema);
+
+export default ClothesModel;

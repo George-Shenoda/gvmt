@@ -17,15 +17,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { AddClothesSchema, AddClothes } from "@/schema/ClothesSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { notFound, useParams } from "next/navigation";
-import { useEffect, useTransition } from "react";
+import { useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-const page = () => {
+export default function NewClothesPage() {
     const router = useRouter();
     const form = useForm({
         resolver: zodResolver(AddClothesSchema),
@@ -219,6 +218,4 @@ const page = () => {
             </Card>
         </div>
     );
-};
-
-export default page;
+}
