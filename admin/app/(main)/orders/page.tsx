@@ -127,7 +127,9 @@ const OrdersPage = () => {
 
     const formatDate = (dateStr: string) => {
         try {
+            if (!dateStr) return dateStr;
             const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
             return date.toLocaleDateString("ar-EG", {
                 weekday: "long",
                 year: "numeric",

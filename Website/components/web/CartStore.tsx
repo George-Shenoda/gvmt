@@ -146,7 +146,9 @@ const CartStore = () => {
     };
 
     const formatDate = (dateStr: string) => {
+        if (!dateStr) return "";
         const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return "";
         return date.toLocaleDateString("ar-EG", {
             weekday: "long",
             year: "numeric",
