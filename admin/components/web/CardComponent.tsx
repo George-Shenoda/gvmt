@@ -75,7 +75,7 @@ export default function CardItem() {
     if (!clothes || clothes.length === 0 || !isSuccess) {
         return (
             <div className="container mx-auto w-screen h-[calc(100vh-8rem)] flex items-center justify-center">
-                <h2 className="text-2xl font-bold">مفيش لبس他现在</h2>
+                <h2 className="text-2xl font-bold">مفيش لبس</h2>
             </div>
         );
     }
